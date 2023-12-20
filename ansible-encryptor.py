@@ -66,16 +66,23 @@ def get_password(prompt="Enter Ansible Vault password: "):
         else:
             print("Passwords do not match. Please try again.")
 
-def main():
-    parser = argparse.ArgumentParser(description="Manage file encryption with Ansible Vault.")
-    parser.add_argument("--encrypt", action="store_true", help="Encrypt files.")
-    parser.add_argument("--decrypt", action="store_true", help="Decrypt files.")
-    parser.add_argument("--open", action="store_true", help="Decrypt files temporarily.")
-    parser.add_argument("--close", action="store_true", help="Remove decrypted files.")
-    parser.add_argument("--temporary", action="store_true", help="Temporarily open files.")
-    parser.add_argument("--preview", action="store_true", help="Preview actions without making changes.")
-    parser.add_argument("--verbose", action="store_true", help="Verbose output.")
+def setup_arg_parser():
+    """
+    Setup argument parser with detailed descriptions for each option.
+    """
+    parser = argparse.ArgumentParser(description="Manage file encryption with Ansible Vault.", formatter_class=argparse.RawTextHelpFormatter)
+    parser.add_argument("--encrypt", action="store_true", help="Encrypt all non-hidden files in the directory except Readme.md.")
+    parser.add_argument("--decrypt", action="store_true", help="Decrypt all .vault files in the directory.")
+    parser.add_argument("--open", action="store_true", help="Temporarily decrypt .vault files for viewing/editing.")
+    parser.add_argument("--close", action="store_true", help="Remove all non-vault files (decrypted files) in the directory.")
+    parser.add_argument("--temporary", action="store_true", help="Temporarily decrypt files and re-encrypt after a key press.")
+    parser.add_argument("--preview", action="store_true", help="Preview the actions to be taken without making any changes.")
+    parser.add_argument("--verbose", action="store_true", help="Provide verbose output of the script's actions.")
+    return parser
 
+
+def main():
+    parser = setup_arg_parser()
     args = parser.parse_args()
     directory = os.getcwd()
 
