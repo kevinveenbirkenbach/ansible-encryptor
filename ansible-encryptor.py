@@ -42,11 +42,19 @@ def process_files(directory, password, action, preview=False, verbose=False):
                 exit(1)
             os.rename(os.path.join(directory, file), os.path.join(directory, target_file))
 
-def update_gitignore(directory, mode):
+def update_gitignore(directory, mode, preview=False, verbose=False):
     """
-    Update .gitignore to include/exclude files based on mode.
+    Update .gitignore to include/exclude files based on mode, or preview changes.
     """
     gitignore_path = os.path.join(directory, ".gitignore")
+    
+    if verbose:
+        action = "Creating" if mode == "encrypt" else "Removing"
+        print(f"{action} .gitignore entries for mode: {mode}")
+        
+    if preview:
+        return
+
     if mode == "encrypt":
         with open(gitignore_path, "w") as gitignore:
             gitignore.write("*\n!*.vault\n!Readme.md\n")
@@ -126,7 +134,7 @@ def main():
         close_files(directory, args.preview, args.verbose)
     
     if args.encrypt or args.decrypt:
-        update_gitignore(directory, "encrypt" if args.encrypt else "decrypt")
+        update_gitignore(directory, "encrypt" if args.encrypt else "decrypt", args.preview, args.verbose)
 
 if __name__ == "__main__":
     main()
