@@ -113,10 +113,6 @@ def main():
     args = parser.parse_args()
     directory = os.getcwd()
 
-    if not (args.encrypt or args.decrypt or args.open or args.temporary or args.close):
-        parser.print_help()
-        return
-
     if args.encrypt:
         password = get_password()
     elif args.decrypt or args.open or args.temporary:
@@ -124,6 +120,7 @@ def main():
 
     if args.encrypt:
         process_files(directory, password, "encrypt", args.preview, args.verbose)
+        update_gitignore(directory, "encrypt", args.preview, args.verbose)
     elif args.decrypt or args.open:
         process_files(directory, password, "decrypt", args.preview, args.verbose)
     elif args.temporary:
@@ -132,9 +129,8 @@ def main():
         process_files(directory, password, "encrypt", args.preview, args.verbose)
     elif args.close:
         close_files(directory, args.preview, args.verbose)
-    
-    if args.encrypt or args.decrypt:
-        update_gitignore(directory, "encrypt" if args.encrypt else "decrypt", args.preview, args.verbose)
+    else:
+        parser.print_help()
 
 if __name__ == "__main__":
     main()
