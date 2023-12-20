@@ -66,6 +66,26 @@ def get_password(prompt="Enter Ansible Vault password: "):
         else:
             print("Passwords do not match. Please try again.")
 
+def close_files(directory, preview=False, verbose=False):
+    """
+    Remove or preview removal of decrypted files.
+    """
+    files_to_remove = [f for f in list_files(directory, ["Readme.md"]) if not f.endswith(".vault")]
+    if not files_to_remove:
+        print("No files to remove.")
+        return
+
+    if verbose or preview:
+        print("The following files will be removed:" if not preview else "Files to be removed:")
+        for file in files_to_remove:
+            print(file)
+
+    if not preview:
+        for file in files_to_remove:
+            os.remove(os.path.join(directory, file))
+            if verbose:
+                print(f"Removed: {file}")
+
 def setup_arg_parser():
     """
     Setup argument parser with detailed descriptions for each option.
@@ -79,7 +99,6 @@ def setup_arg_parser():
     parser.add_argument("--preview", action="store_true", help="Preview the actions to be taken without making any changes.")
     parser.add_argument("--verbose", action="store_true", help="Provide verbose output of the script's actions.")
     return parser
-
 
 def main():
     parser = setup_arg_parser()
@@ -104,9 +123,7 @@ def main():
         input("Press Enter to re-encrypt files...")
         process_files(directory, password, "encrypt", args.preview, args.verbose)
     elif args.close:
-        for file in list_files(directory, ["Readme.md"]):
-            if not file.endswith(".vault"):
-                os.remove(os.path.join(directory, file))
+        close_files(directory, args.preview, args.verbose)
     
     if args.encrypt or args.decrypt:
         update_gitignore(directory, "encrypt" if args.encrypt else "decrypt")
