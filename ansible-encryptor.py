@@ -121,7 +121,7 @@ def setup_arg_parser():
         formatter_class=argparse.RawTextHelpFormatter
     )
     parser.add_argument(
-        "--mode",
+        "mode",
         choices=["encrypt", "decrypt", "open", "close", "temporary"],
         help=(
             "Mode of operation:\n"
