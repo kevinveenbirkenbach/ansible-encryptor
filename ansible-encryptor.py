@@ -15,19 +15,20 @@ def create_temp_vault_password_file(password):
 
 def list_files(directory, exclude, recursive):
     """
-    List all files in a directory, excluding specified files, hidden files, 
+    List all files in a directory, excluding specified files (case-insensitive), hidden files, 
     and recursively if specified.
     """
+    exclude_lower = [x.lower() for x in exclude]  # Umwandeln der Ausschlussliste in Kleinbuchstaben
     files = []
     for root, dirs, filenames in os.walk(directory):
-        # Filter versteckte Verzeichnisse
-        dirs[:] = [d for d in dirs if not d.startswith('.')]
+        dirs[:] = [d for d in dirs if not d.startswith('.')]  # Versteckte Verzeichnisse filtern
         
         for filename in filenames:
             if filename.startswith('.'):
                 continue  # Versteckte Dateien überspringen
-            if filename in exclude:
-                continue  # Ausgeschlossene Dateien überspringen
+
+            if filename.lower() in exclude_lower:
+                continue  # Case-insensitive Ausschluss
 
             filepath = os.path.join(root, filename)
             if os.path.isfile(filepath):
@@ -36,6 +37,7 @@ def list_files(directory, exclude, recursive):
         if not recursive:
             break
     return files
+
 
 def run_subprocess(command, cwd, password_file):
     """
@@ -53,7 +55,7 @@ def process_files(directory, password, action, preview=False, verbose=False, rec
     """
     Process files for encryption/decryption based on action.
     """
-    for file in list_files(directory, ["Readme.md"], recursive):
+    for file in list_files(directory, ["readme.md"], recursive):
         if action == "encrypt" and not file.endswith(".vault"):
             target_file = file + ".vault"
             action_cmd = ["ansible-vault", "encrypt", file]
