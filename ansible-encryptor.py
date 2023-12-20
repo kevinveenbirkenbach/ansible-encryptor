@@ -3,11 +3,20 @@ import subprocess
 import argparse
 import getpass
 
-def list_files(directory, exclude):
+def list_files(directory, exclude, recursive):
     """
-    List all files in a directory, excluding specified files and hidden files.
+    List all files in a directory, recursively if specified.
     """
-    return [f for f in os.listdir(directory) if os.path.isfile(os.path.join(directory, f)) and not f.startswith('.') and f not in exclude]
+    files = []
+    for root, dirs, filenames in os.walk(directory):
+        for filename in filenames:
+            if not filename.startswith('.') and filename not in exclude:
+                filepath = os.path.join(root, filename)
+                if os.path.isfile(filepath):
+                    files.append(filepath.replace(directory + '/', ''))
+        if not recursive:
+            break
+    return files
 
 def run_subprocess(command, cwd):
     """
@@ -19,11 +28,11 @@ def run_subprocess(command, cwd):
         return False
     return True
 
-def process_files(directory, password, action, preview=False, verbose=False):
+def process_files(directory, password, action, preview=False, verbose=False, recursive=False):
     """
     Process files for encryption/decryption based on action.
     """
-    for file in list_files(directory, ["Readme.md"]):
+    for file in list_files(directory, ["Readme.md"], recursive):
         if action == "encrypt" and not file.endswith(".vault"):
             target_file = file + ".vault"
             action_cmd = ["ansible-vault", "encrypt", file, "--vault-password", password]
@@ -146,6 +155,11 @@ def setup_arg_parser():
         help="Provide verbose output of the script's actions. "
              "Gives detailed information about the process."
     )
+    parser.add_argument(
+        "-r", "--recursive",
+        action="store_true",
+        help="Recursively process files in subdirectories."
+    )
     return parser
 
 def main():
@@ -153,25 +167,23 @@ def main():
     args = parser.parse_args()
     directory = os.getcwd()
 
-    if args.encrypt and args.close:
+    if args.encrypt or args.close:
         password = get_password()
     elif args.decrypt or args.open or args.temporary:
         password = getpass.getpass("Enter Ansible Vault password: ")
 
-    if args.encrypt:
-        process_files(directory, password, "encrypt", args.preview, args.verbose)
-        update_gitignore(directory, "encrypt", args.preview, args.verbose)
-    elif args.decrypt:
-        process_files(directory, password, "decrypt", args.preview, args.verbose)
-        update_gitignore(directory, "decrypt", args.preview, args.verbose)
-    elif args.open:
-        process_files(directory, password, "decrypt", args.preview, args.verbose)
-    elif args.close:
-        process_files(directory, password, "encrypt", args.preview, args.verbose)
+    if args.encrypt or args.close:
+        process_files(directory, password, "encrypt", args.preview, args.verbose, args.recursive)
+        if args.encrypt:
+            update_gitignore(directory, "encrypt", args.preview, args.verbose)
+    elif args.decrypt or args.open:
+        process_files(directory, password, "decrypt", args.preview, args.verbose, args.recursive)
+        if args.decrypt:
+            update_gitignore(directory, "decrypt", args.preview, args.verbose)
     elif args.temporary:
-        process_files(directory, password, "decrypt", args.preview, args.verbose)
+        process_files(directory, password, "decrypt", args.preview, args.verbose, args.recursive)
         input("Press Enter to re-encrypt files...")
-        process_files(directory, password, "encrypt", args.preview, args.verbose)
+        process_files(directory, password, "encrypt", args.preview, args.verbose, args.recursive)
     else:
         parser.print_help()
 
