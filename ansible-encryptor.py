@@ -2,6 +2,16 @@ import os
 import subprocess
 import argparse
 import getpass
+import tempfile
+
+def create_temp_vault_password_file(password):
+    """
+    Create a temporary file with the vault password.
+    """
+    temp_file = tempfile.NamedTemporaryFile(delete=False, mode='w')
+    temp_file.write(password)
+    temp_file.close()
+    return temp_file.name
 
 def list_files(directory, exclude, recursive):
     """
@@ -27,11 +37,13 @@ def list_files(directory, exclude, recursive):
             break
     return files
 
-def run_subprocess(command, cwd):
+def run_subprocess(command, cwd, password_file):
     """
-    Run a subprocess command and handle errors.
+    Run a subprocess command, using a temporary password file.
     """
+    command += ["--vault-password-file", password_file]
     result = subprocess.run(command, cwd=cwd, capture_output=True, text=True)
+    
     if result.returncode != 0:
         print(f"Error executing {' '.join(command)}: {result.stderr}")
         return False
@@ -44,21 +56,25 @@ def process_files(directory, password, action, preview=False, verbose=False, rec
     for file in list_files(directory, ["Readme.md"], recursive):
         if action == "encrypt" and not file.endswith(".vault"):
             target_file = file + ".vault"
-            action_cmd = ["ansible-vault", "encrypt", file, "--vault-password", password]
+            action_cmd = ["ansible-vault", "encrypt", file]
         elif action == "decrypt" and file.endswith(".vault"):
             target_file = file.replace(".vault", "")
-            action_cmd = ["ansible-vault", "decrypt", file, "--vault-password", password]
+            action_cmd = ["ansible-vault", "decrypt", file]
         else:
             continue
 
         if verbose or preview:
             print(f"{action.title()}ing: {file} -> {target_file}")
-
+            
         if not preview:
-            if not run_subprocess(action_cmd, directory):
-                print(f"Failed to {action} file: {file}")
-                exit(1)
-            os.rename(os.path.join(directory, file), os.path.join(directory, target_file))
+            password_file = create_temp_vault_password_file(password)
+            try:
+                if not run_subprocess(action_cmd, directory, password_file):
+                    print(f"Failed to {action} file: {file}")
+                    exit(1)
+                os.rename(os.path.join(directory, file), os.path.join(directory, target_file))
+            finally:
+                os.remove(password_file)
 
 def update_gitignore(directory, mode, preview=False, verbose=False):
     """
