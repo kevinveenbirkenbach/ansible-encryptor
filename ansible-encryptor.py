@@ -15,20 +15,17 @@ def create_temp_vault_password_file(password):
 
 def list_files(directory, exclude, recursive):
     """
-    List all files in a directory, excluding specified files (case-insensitive), hidden files, 
+    List all files in a directory, excluding specified files (case-insensitive), .git folders and files, 
     and recursively if specified.
     """
-    exclude_lower = [x.lower() for x in exclude]  # Umwandeln der Ausschlussliste in Kleinbuchstaben
+    exclude_lower = [x.lower() for x in exclude]
     files = []
     for root, dirs, filenames in os.walk(directory):
-        dirs[:] = [d for d in dirs if not d.startswith('.')]  # Versteckte Verzeichnisse filtern
+        dirs[:] = [dir for dir in dirs if not dir == '.git'] 
         
         for filename in filenames:
-            if filename.startswith('.'):
-                continue  # Versteckte Dateien überspringen
-
             if filename.lower() in exclude_lower:
-                continue  # Case-insensitive Ausschluss
+                continue 
 
             filepath = os.path.join(root, filename)
             if os.path.isfile(filepath):
@@ -114,7 +111,7 @@ def close_files(directory, preview=False, verbose=False):
     """
     Remove or preview removal of decrypted files.
     """
-    files_to_remove = [f for f in list_files(directory, ["Readme.md"]) if not f.endswith(".vault")]
+    files_to_remove = [f for f in list_files(directory, ["Readme.md",".gitignore"]) if not f.endswith(".vault")]
     if not files_to_remove:
         print("No files to remove.")
         return
