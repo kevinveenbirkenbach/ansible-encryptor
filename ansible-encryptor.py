@@ -86,6 +86,10 @@ def main():
     args = parser.parse_args()
     directory = os.getcwd()
 
+    if not (args.encrypt or args.decrypt or args.open or args.temporary or args.close):
+        parser.print_help()
+        return
+
     if args.encrypt:
         password = get_password()
     elif args.decrypt or args.open or args.temporary:
