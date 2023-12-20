@@ -121,45 +121,37 @@ def setup_arg_parser():
         formatter_class=argparse.RawTextHelpFormatter
     )
     parser.add_argument(
-        "--encrypt", 
-        action="store_true",
-        help="Encrypt all non-hidden files in the directory except Readme.md. "
-             "Updates .gitignore to exclude non-vault files. "
-             "Requires password confirmation."
+        "--mode",
+        choices=["encrypt", "decrypt", "open", "close", "temporary"],
+        help=(
+            "Mode of operation:\n"
+            "\n"
+            "encrypt:\n"
+            "Encrypt all non-hidden files (except Readme.md) in the directory.\n"
+            "Updates .gitignore to exclude non-vault files.\n"
+            "\n"
+            "decrypt:\n"
+            "Decrypt all .vault files in the directory.\n"
+            "Updates .gitignore to include decrypted files.\n"
+            "\n"
+            "open:\n"
+            "Temporarily decrypt .vault files for viewing/editing without modifying .gitignore.\n"
+            "\n"
+            "close:\n"
+            "Re-encrypt decrypted files and remove them from the directory. Used after 'open' or 'temporary'.\n"
+            "\n"
+            "temporary:\n"
+            "Temporarily decrypt files for session use and re-encrypt after pressing Enter.\n"
+        )
     )
     parser.add_argument(
-        "--decrypt", 
-        action="store_true",
-        help="Decrypt all .vault files in the directory. "
-             "Updates .gitignore to include decrypted files. "
-             "Password required."
-    )
-    parser.add_argument(
-        "--open", 
-        action="store_true",
-        help="Temporarily decrypt .vault files for viewing/editing. "
-             "Password required. Does not modify .gitignore."
-    )
-    parser.add_argument(
-        "--close", 
-        action="store_true",
-        help="Remove all non-vault files (decrypted files) in the directory. "
-             "Used after --open or --temporary to clean up decrypted files."
-    )
-    parser.add_argument(
-        "--temporary", 
-        action="store_true",
-        help="Temporarily decrypt files for session use and re-encrypt after pressing Enter. "
-             "Password required. Does not modify .gitignore."
-    )
-    parser.add_argument(
-        "--preview", 
+        "-p","--preview", 
         action="store_true",
         help="Preview the actions to be taken without making any changes. "
              "Useful for checking what the script will do."
     )
     parser.add_argument(
-        "--verbose", 
+        "-v","--verbose", 
         action="store_true",
         help="Provide verbose output of the script's actions. "
              "Gives detailed information about the process."
@@ -176,20 +168,22 @@ def main():
     args = parser.parse_args()
     directory = os.getcwd()
 
-    if args.encrypt or args.close:
+    if args.mode in ["encrypt", "close"]:
         password = get_password()
-    elif args.decrypt or args.open or args.temporary:
+    elif args.mode in ["decrypt", "open", "temporary"]:
         password = getpass.getpass("Enter Ansible Vault password: ")
 
-    if args.encrypt or args.close:
-        process_files(directory, password, "encrypt", args.preview, args.verbose, args.recursive)
-        if args.encrypt:
-            update_gitignore(directory, "encrypt", args.preview, args.verbose)
-    elif args.decrypt or args.open:
+    if args.mode in "encrypt":
+        process_files(directory, password, args.mode, args.preview, args.verbose, args.recursive)
+        update_gitignore(directory, args.mode, args.preview, args.verbose)
+    elif args.mode == "decrypt":
+        process_files(directory, password, args.mode, args.preview, args.verbose, args.recursive)
+        update_gitignore(directory, args.mode, args.preview, args.verbose)
+    elif args.mode == "open":
         process_files(directory, password, "decrypt", args.preview, args.verbose, args.recursive)
-        if args.decrypt:
-            update_gitignore(directory, "decrypt", args.preview, args.verbose)
-    elif args.temporary:
+    elif args.mode == "close":
+        process_files(directory, password, "encrypt", args.preview, args.verbose, args.recursive)
+    elif args.mode == "temporary":
         process_files(directory, password, "decrypt", args.preview, args.verbose, args.recursive)
         input("Press Enter to re-encrypt files...")
         process_files(directory, password, "encrypt", args.preview, args.verbose, args.recursive)
