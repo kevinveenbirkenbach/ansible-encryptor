@@ -53,25 +53,16 @@ def process_files(directory, password, action, preview=False, verbose=False, rec
     Process files for encryption/decryption based on action.
     """
     for file in list_files(directory, ["readme.md"], recursive):
-        if action == "encrypt" and not file.endswith(".vault"):
-            target_file = file + ".vault"
-            action_cmd = ["ansible-vault", "encrypt", file]
-        elif action == "decrypt" and file.endswith(".vault"):
-            target_file = file.replace(".vault", "")
-            action_cmd = ["ansible-vault", "decrypt", file]
-        else:
-            continue
-
         if verbose or preview:
-            print(f"{action.title()}ing: {file} -> {target_file}")
+            print(f"{action.title()}ing: {file}")
             
         if not preview:
             password_file = create_temp_vault_password_file(password)
             try:
+                action_cmd = ["ansible-vault", action, file]
                 if not run_subprocess(action_cmd, directory, password_file):
                     print(f"Failed to {action} file: {file}")
                     exit(1)
-                os.rename(os.path.join(directory, file), os.path.join(directory, target_file))
             finally:
                 os.remove(password_file)
 
@@ -155,9 +146,7 @@ def main():
     elif args.mode in ["decrypt", "temporary"]:
         password = getpass.getpass("Enter Ansible Vault password: ")
 
-    if args.mode in "encrypt":
-        process_files(directory, password, args.mode, args.preview, args.verbose, args.recursive)
-    elif args.mode == "decrypt":
+    if args.mode in ["encrypt","decrypt"]:
         process_files(directory, password, args.mode, args.preview, args.verbose, args.recursive)
     elif args.mode == "temporary":
         process_files(directory, password, "decrypt", args.preview, args.verbose, args.recursive)
