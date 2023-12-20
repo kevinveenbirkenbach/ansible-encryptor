@@ -98,14 +98,54 @@ def setup_arg_parser():
     """
     Setup argument parser with detailed descriptions for each option.
     """
-    parser = argparse.ArgumentParser(description="Manage file encryption with Ansible Vault.", formatter_class=argparse.RawTextHelpFormatter)
-    parser.add_argument("--encrypt", action="store_true", help="Encrypt all non-hidden files in the directory except Readme.md.")
-    parser.add_argument("--decrypt", action="store_true", help="Decrypt all .vault files in the directory.")
-    parser.add_argument("--open", action="store_true", help="Temporarily decrypt .vault files for viewing/editing.")
-    parser.add_argument("--close", action="store_true", help="Remove all non-vault files (decrypted files) in the directory.")
-    parser.add_argument("--temporary", action="store_true", help="Temporarily decrypt files and re-encrypt after a key press.")
-    parser.add_argument("--preview", action="store_true", help="Preview the actions to be taken without making any changes.")
-    parser.add_argument("--verbose", action="store_true", help="Provide verbose output of the script's actions.")
+    parser = argparse.ArgumentParser(
+        description="Manage file encryption with Ansible Vault.",
+        formatter_class=argparse.RawTextHelpFormatter
+    )
+    parser.add_argument(
+        "--encrypt", 
+        action="store_true",
+        help="Encrypt all non-hidden files in the directory except Readme.md. "
+             "Updates .gitignore to exclude non-vault files. "
+             "Requires password confirmation."
+    )
+    parser.add_argument(
+        "--decrypt", 
+        action="store_true",
+        help="Decrypt all .vault files in the directory. "
+             "Updates .gitignore to include decrypted files. "
+             "Password required."
+    )
+    parser.add_argument(
+        "--open", 
+        action="store_true",
+        help="Temporarily decrypt .vault files for viewing/editing. "
+             "Password required. Does not modify .gitignore."
+    )
+    parser.add_argument(
+        "--close", 
+        action="store_true",
+        help="Remove all non-vault files (decrypted files) in the directory. "
+             "Used after --open or --temporary to clean up decrypted files."
+    )
+    parser.add_argument(
+        "--temporary", 
+        action="store_true",
+        help="Temporarily decrypt files for session use and re-encrypt after pressing Enter. "
+             "Password required. Does not modify .gitignore."
+    )
+    parser.add_argument(
+        "--preview", 
+        action="store_true",
+        help="Preview the actions to be taken without making any changes. "
+             "Useful for checking what the script will do."
+    )
+    parser.add_argument(
+        "--verbose", 
+        action="store_true",
+        help="Provide verbose output of the script's actions. "
+             "Gives detailed information about the process."
+    )
     return parser
 
 def main():
@@ -113,7 +153,7 @@ def main():
     args = parser.parse_args()
     directory = os.getcwd()
 
-    if args.encrypt:
+    if args.encrypt and args.close:
         password = get_password()
     elif args.decrypt or args.open or args.temporary:
         password = getpass.getpass("Enter Ansible Vault password: ")
@@ -121,14 +161,17 @@ def main():
     if args.encrypt:
         process_files(directory, password, "encrypt", args.preview, args.verbose)
         update_gitignore(directory, "encrypt", args.preview, args.verbose)
-    elif args.decrypt or args.open:
+    elif args.decrypt:
         process_files(directory, password, "decrypt", args.preview, args.verbose)
+        update_gitignore(directory, "decrypt", args.preview, args.verbose)
+    elif args.open:
+        process_files(directory, password, "decrypt", args.preview, args.verbose)
+    elif args.close:
+        process_files(directory, password, "encrypt", args.preview, args.verbose)
     elif args.temporary:
         process_files(directory, password, "decrypt", args.preview, args.verbose)
         input("Press Enter to re-encrypt files...")
         process_files(directory, password, "encrypt", args.preview, args.verbose)
-    elif args.close:
-        close_files(directory, args.preview, args.verbose)
     else:
         parser.print_help()
 
