@@ -75,26 +75,6 @@ def process_files(directory, password, action, preview=False, verbose=False, rec
             finally:
                 os.remove(password_file)
 
-def update_gitignore(directory, mode, preview=False, verbose=False):
-    """
-    Update .gitignore to include/exclude files based on mode, or preview changes.
-    """
-    gitignore_path = os.path.join(directory, ".gitignore")
-    
-    if verbose:
-        action = "Creating" if mode == "encrypt" else "Removing"
-        print(f"{action} .gitignore entries for mode: {mode}")
-        
-    if preview:
-        return
-
-    if mode == "encrypt":
-        with open(gitignore_path, "w") as gitignore:
-            gitignore.write("*\n!*.vault\n!Readme.md\n")
-    elif mode == "decrypt":
-        if os.path.exists(gitignore_path):
-            os.remove(gitignore_path)
-
 def get_password(prompt="Enter Ansible Vault password: "):
     """
     Prompt the user to enter a password twice and verify they match.
@@ -137,26 +117,13 @@ def setup_arg_parser():
     )
     parser.add_argument(
         "mode",
-        choices=["encrypt", "decrypt", "open", "close", "temporary"],
+        choices=["encrypt", "decrypt", "temporary"],
         help=(
             "Mode of operation:\n"
             "\n"
-            "encrypt:\n"
-            "Encrypt all non-hidden files (except Readme.md) in the directory.\n"
-            "Updates .gitignore to exclude non-vault files.\n"
-            "\n"
-            "decrypt:\n"
-            "Decrypt all .vault files in the directory.\n"
-            "Updates .gitignore to include decrypted files.\n"
-            "\n"
-            "open:\n"
-            "Temporarily decrypt .vault files for viewing/editing without modifying .gitignore.\n"
-            "\n"
-            "close:\n"
-            "Re-encrypt decrypted files and remove them from the directory. Used after 'open' or 'temporary'.\n"
-            "\n"
-            "temporary:\n"
-            "Temporarily decrypt files for session use and re-encrypt after pressing Enter.\n"
+            "encrypt: Encrypt all non-hidden files (except Readme.md) in the directory.\n"
+            "decrypt: Decrypt all files in the directory.\n"
+            "temporary: Temporarily decrypt files for session use and re-encrypt after pressing Enter.\n"
         )
     )
     parser.add_argument(
@@ -183,21 +150,15 @@ def main():
     args = parser.parse_args()
     directory = os.getcwd()
 
-    if args.mode in ["encrypt", "close"]:
+    if args.mode in ["encrypt"]:
         password = get_password()
-    elif args.mode in ["decrypt", "open", "temporary"]:
+    elif args.mode in ["decrypt", "temporary"]:
         password = getpass.getpass("Enter Ansible Vault password: ")
 
     if args.mode in "encrypt":
         process_files(directory, password, args.mode, args.preview, args.verbose, args.recursive)
-        update_gitignore(directory, args.mode, args.preview, args.verbose)
     elif args.mode == "decrypt":
         process_files(directory, password, args.mode, args.preview, args.verbose, args.recursive)
-        update_gitignore(directory, args.mode, args.preview, args.verbose)
-    elif args.mode == "open":
-        process_files(directory, password, "decrypt", args.preview, args.verbose, args.recursive)
-    elif args.mode == "close":
-        process_files(directory, password, "encrypt", args.preview, args.verbose, args.recursive)
     elif args.mode == "temporary":
         process_files(directory, password, "decrypt", args.preview, args.verbose, args.recursive)
         input("Press Enter to re-encrypt files...")
