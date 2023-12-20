@@ -5,15 +5,24 @@ import getpass
 
 def list_files(directory, exclude, recursive):
     """
-    List all files in a directory, recursively if specified.
+    List all files in a directory, excluding specified files, hidden files, 
+    and recursively if specified.
     """
     files = []
     for root, dirs, filenames in os.walk(directory):
+        # Filter versteckte Verzeichnisse
+        dirs[:] = [d for d in dirs if not d.startswith('.')]
+        
         for filename in filenames:
-            if not filename.startswith('.') and filename not in exclude:
-                filepath = os.path.join(root, filename)
-                if os.path.isfile(filepath):
-                    files.append(filepath.replace(directory + '/', ''))
+            if filename.startswith('.'):
+                continue  # Versteckte Dateien überspringen
+            if filename in exclude:
+                continue  # Ausgeschlossene Dateien überspringen
+
+            filepath = os.path.join(root, filename)
+            if os.path.isfile(filepath):
+                files.append(filepath.replace(directory + '/', '', 1))
+
         if not recursive:
             break
     return files
