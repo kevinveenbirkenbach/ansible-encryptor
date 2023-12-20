@@ -37,10 +37,6 @@ def process_files(directory, password, action, preview=False, verbose=False):
             print(f"{action.title()}ing: {file} -> {target_file}")
 
         if not preview:
-            subprocess.run(action_cmd, cwd=directory)
-            os.rename(os.path.join(directory, file), os.path.join(directory, target_file))
-            
-        if not preview:
             if not run_subprocess(action_cmd, directory):
                 print(f"Failed to {action} file: {file}")
                 exit(1)
