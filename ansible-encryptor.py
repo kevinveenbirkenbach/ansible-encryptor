@@ -54,6 +54,18 @@ def update_gitignore(directory, mode):
         if os.path.exists(gitignore_path):
             os.remove(gitignore_path)
 
+def get_password(prompt="Enter Ansible Vault password: "):
+    """
+    Prompt the user to enter a password twice and verify they match.
+    """
+    while True:
+        password = getpass.getpass(prompt)
+        password_verify = getpass.getpass("Confirm password: ")
+        if password == password_verify:
+            return password
+        else:
+            print("Passwords do not match. Please try again.")
+
 def main():
     parser = argparse.ArgumentParser(description="Manage file encryption with Ansible Vault.")
     parser.add_argument("--encrypt", action="store_true", help="Encrypt files.")
@@ -67,7 +79,9 @@ def main():
     args = parser.parse_args()
     directory = os.getcwd()
 
-    if args.encrypt or args.decrypt or args.temporary:
+    if args.encrypt:
+        password = get_password()
+    elif args.decrypt or args.open or args.temporary:
         password = getpass.getpass("Enter Ansible Vault password: ")
 
     if args.encrypt:
