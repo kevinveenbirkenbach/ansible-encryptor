@@ -9,6 +9,16 @@ def list_files(directory, exclude):
     """
     return [f for f in os.listdir(directory) if os.path.isfile(os.path.join(directory, f)) and not f.startswith('.') and f not in exclude]
 
+def run_subprocess(command, cwd):
+    """
+    Run a subprocess command and handle errors.
+    """
+    result = subprocess.run(command, cwd=cwd, capture_output=True, text=True)
+    if result.returncode != 0:
+        print(f"Error executing {' '.join(command)}: {result.stderr}")
+        return False
+    return True
+
 def process_files(directory, password, action, preview=False, verbose=False):
     """
     Process files for encryption/decryption based on action.
@@ -28,6 +38,12 @@ def process_files(directory, password, action, preview=False, verbose=False):
 
         if not preview:
             subprocess.run(action_cmd, cwd=directory)
+            os.rename(os.path.join(directory, file), os.path.join(directory, target_file))
+            
+        if not preview:
+            if not run_subprocess(action_cmd, directory):
+                print(f"Failed to {action} file: {file}")
+                exit(1)
             os.rename(os.path.join(directory, file), os.path.join(directory, target_file))
 
 def update_gitignore(directory, mode):
