@@ -16,7 +16,7 @@ This tool is licensed under the GNU Affero General Public License, Version 3.
 
 <img src="https://cybermaster.space/wp-content/uploads/sites/7/2023/11/FVG_8364BW-scaled.jpg" width="300" style="float: right; margin-left: 30px;">
 
-My name is Kevin Veen-Birkenbach, the author of Ansible Encrypter. I specialize in implementing secure and scalable IT infrastructure and software solutions. Feel free to contact me for more details:
+My name is Kevin Veen-Birkenbach, the author of Ansible Encrypter. I specialize in implementing secure and scalable IT infrastructure and software solutions. Contact me for expert assistance.
 
 - 🌍 Website: [www.CyberMaster.Space](https://cybermaster.space)
 - 📧 Email: [kevin@veen.world](mailto:kevin@veen.world)
