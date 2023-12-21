@@ -62,11 +62,17 @@ def run_subprocess(command, cwd, password_file):
     """
     command += ["--vault-password-file", password_file]
     result = subprocess.run(command, cwd=cwd, capture_output=True, text=True)
-    
+
     if result.returncode != 0:
-        print(f"Error executing {' '.join(command)}: {result.stderr}")
-        return False
+        # Check if the error is because the file is not vault encrypted
+        if "input is not vault encrypted data" in result.stderr or "is not a vault encrypted file" in result.stderr:
+            print(f"Skipping: '{command[2]}' is not a vault encrypted file.")
+            return True  # Return True to skip this file and continue processing others
+        else:
+            print(f"Error executing {' '.join(command)}: {result.stderr}")
+            return False
     return True
+
 
 def process_files(directory, password, action, preview, verbose, recursive, filetypes):
     """
