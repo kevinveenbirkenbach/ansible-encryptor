@@ -13,19 +13,40 @@ def create_temp_vault_password_file(password):
     temp_file.close()
     return temp_file.name
 
-def list_files(directory, exclude, recursive):
+
+def should_process_file(filename, exclude_lower, filetypes_lower):
     """
-    List all files in a directory, excluding specified files (case-insensitive), .git folders and files, 
+    Determine whether a file should be processed based on exclusion list and file types.
+
+    :param filename: The name of the file to check.
+    :param exclude_lower: A list of filenames to exclude, in lowercase.
+    :param filetypes_lower: A list of file extensions to include, in lowercase.
+    :return: True if the file should be processed, False otherwise.
+    """
+    # Check if the filename (in lowercase) is in the exclusion list
+    if filename.lower() in exclude_lower:
+        return False;
+
+    if filetypes_lower:
+        # Check if filetypes is defined and if the filename (in lowercase) ends with any of the defined file types
+        return filetypes_lower and any(filename.lower().endswith(ftype) for ftype in filetypes_lower)
+
+    return True
+
+def list_files(directory, exclude, recursive, filetypes):
+    """
+    List all files in a directory with specific file types, excluding specified files (case-insensitive), .git folders and files, 
     and recursively if specified.
     """
     exclude_lower = [x.lower() for x in exclude]
+    filetypes_lower = [ftype.lower() for ftype in filetypes]
     files = []
     for root, dirs, filenames in os.walk(directory):
         dirs[:] = [dir for dir in dirs if not dir == '.git'] 
         
         for filename in filenames:
-            if filename.lower() in exclude_lower:
-                continue 
+            if not should_process_file(filename, exclude_lower, filetypes_lower):
+                continue
 
             filepath = os.path.join(root, filename)
             if os.path.isfile(filepath):
@@ -34,7 +55,6 @@ def list_files(directory, exclude, recursive):
         if not recursive:
             break
     return files
-
 
 def run_subprocess(command, cwd, password_file):
     """
@@ -48,11 +68,11 @@ def run_subprocess(command, cwd, password_file):
         return False
     return True
 
-def process_files(directory, password, action, preview=False, verbose=False, recursive=False):
+def process_files(directory, password, action, preview, verbose, recursive, filetypes):
     """
     Process files for encryption/decryption based on action.
     """
-    for file in list_files(directory, ["readme.md"], recursive):
+    for file in list_files(directory, [".gitignore"], recursive, filetypes):
         if verbose or preview:
             print(f"{action.title()}ing: {file}")
             
@@ -77,26 +97,6 @@ def get_password(prompt="Enter Ansible Vault password: "):
             return password
         else:
             print("Passwords do not match. Please try again.")
-
-def close_files(directory, preview=False, verbose=False):
-    """
-    Remove or preview removal of decrypted files.
-    """
-    files_to_remove = [f for f in list_files(directory, ["Readme.md",".gitignore"]) if not f.endswith(".vault")]
-    if not files_to_remove:
-        print("No files to remove.")
-        return
-
-    if verbose or preview:
-        print("The following files will be removed:" if not preview else "Files to be removed:")
-        for file in files_to_remove:
-            print(file)
-
-    if not preview:
-        for file in files_to_remove:
-            os.remove(os.path.join(directory, file))
-            if verbose:
-                print(f"Removed: {file}")
 
 def setup_arg_parser():
     """
@@ -134,6 +134,11 @@ def setup_arg_parser():
         action="store_true",
         help="Recursively process files in subdirectories."
     )
+    parser.add_argument(
+        "-i", "--include-filetypes",
+        nargs="*",
+        help="Apply actions only to files with the specified extensions (e.g., .yml, .md). Separate multiple types with spaces."
+    )
     return parser
 
 def main():
@@ -146,12 +151,14 @@ def main():
     elif args.mode in ["decrypt", "temporary"]:
         password = getpass.getpass("Enter Ansible Vault password: ")
 
+    filetypes = args.include_filetypes if args.include_filetypes else []
+
     if args.mode in ["encrypt","decrypt"]:
-        process_files(directory, password, args.mode, args.preview, args.verbose, args.recursive)
+        process_files(directory, password, args.mode, args.preview, args.verbose, args.recursive, filetypes)
     elif args.mode == "temporary":
-        process_files(directory, password, "decrypt", args.preview, args.verbose, args.recursive)
+        process_files(directory, password, "decrypt", args.preview, args.verbose, args.recursive, filetypes)
         input("Press Enter to re-encrypt files...")
-        process_files(directory, password, "encrypt", args.preview, args.verbose, args.recursive)
+        process_files(directory, password, "encrypt", args.preview, args.verbose, args.recursive, filetypes)
     else:
         parser.print_help()
 

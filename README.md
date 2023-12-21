@@ -6,7 +6,6 @@ Ansible Encrypter is a Python script designed for secure file management in Ansi
 
 - Encrypt and decrypt files within a directory using Ansible Vault.
 - Temporary file access for secure editing.
-- Automatic .gitignore updates to exclude unencrypted files.
 
 ## License
 
