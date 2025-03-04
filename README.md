@@ -1,26 +1,89 @@
-# Ansible Encrypter
+# Ansible Encrypter CLI (ansenc) 🔐
 
-Ansible Encrypter is a Python script designed for secure file management in Ansible environments. It provides functionality for encrypting and decrypting files, temporary file access, and .gitignore integration to ensure the security of sensitive data.
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0.en.html) [![GitHub stars](https://img.shields.io/github/stars/kevinveenbirkenbach/ansible-encrypter.svg?style=social)](https://github.com/kevinveenbirkenbach/ansible-encrypter/stargazers)
 
-## Features
+Ansible Encrypter CLI (ansenc) is a powerful command-line tool for managing file encryption and decryption using Ansible Vault. It helps you securely encrypt files within your current directory (and its subdirectories if desired) with ease, and supports temporary decryption sessions for on-the-fly editing.
 
-- Encrypt and decrypt files within a directory using Ansible Vault.
-- Temporary file access for secure editing.
+---
 
-## License
+## 🛠 Features
 
-This tool is licensed under the GNU Affero General Public License, Version 3.
+- **Encryption & Decryption:** Encrypt and decrypt files using Ansible Vault.
+- **Temporary Mode:** Decrypt files temporarily, then re-encrypt them after your session.
+- **Selective Processing:** Apply actions only to specific file types.
+- **Recursive Traversal:** Process files recursively through subdirectories.
+- **Preview Mode:** Preview changes before actually applying them.
+- **Verbose Output:** Get detailed logs of every operation for full transparency.
 
-## Author
+---
 
-<img src="https://cybermaster.space/wp-content/uploads/sites/7/2023/11/FVG_8364BW-scaled.jpg" width="300" style="float: right; margin-left: 30px;">
+## 📥 Installation
 
-My name is Kevin Veen-Birkenbach, the author of Ansible Encrypter. I specialize in implementing secure and scalable IT infrastructure and software solutions. Contact me for expert assistance.
+Install Ansible Encrypter CLI using [Kevin's Package Manager](https://github.com/kevinveenbirkenbach/package-manager) under the alias `ansenc`:
 
-- 🌍 Website: [www.CyberMaster.Space](https://cybermaster.space)
-- 📧 Email: [kevin@veen.world](mailto:kevin@veen.world)
-- ☎️ Phone: [+ 49 178 179 80 23](tel:00491781798023)
+```bash
+package-manager install ansenc
+```
 
-## Acknowledgements
+This command installs ansenc globally, making it available in your terminal. 🚀
 
-This project was inspired by and developed with insights from a conversation on OpenAI. For more details about the genesis and evolution of this script, see the discussion [here](https://chat.openai.com/share/224a0314-1703-4a36-8f9f-5db29ad1f97e).
+---
+
+## 🚀 Usage
+
+Run Ansible Encrypter CLI from the command line to encrypt, decrypt, or temporarily decrypt files in your current directory.
+
+### Basic Examples
+
+- **Encrypt Files:**
+  ```bash
+  ansenc encrypt
+  ```
+  Prompts you to enter and confirm your Ansible Vault password, then encrypts all applicable files in the current directory.
+
+- **Decrypt Files:**
+  ```bash
+  ansenc decrypt
+  ```
+  Prompts for your vault password and decrypts all files matching the specified criteria.
+
+- **Temporary Decryption:**
+  ```bash
+  ansenc temporary
+  ```
+  Decrypts files temporarily; after you press Enter, the files are re-encrypted.
+
+### Options
+
+- **`--preview`**: Show what changes would be made without modifying any files.
+- **`--verbose`**: Display detailed log information during processing.
+- **`--recursive`**: Process files in all subdirectories.
+- **`--include-filetypes`**: Specify file extensions (e.g., `.yml`, `.md`) to limit processing.
+
+Example with options:
+```bash
+ansenc encrypt --recursive --include-filetypes .yml .md --verbose
+```
+
+Run `ansenc --help` for a complete list of options and usage details.
+
+---
+
+## 🧑‍💻 Author
+
+Developed by **Kevin Veen-Birkenbach**  
+- 📧 [kevin@veen.world](mailto:kevin@veen.world)  
+- 🌐 [https://www.veen.world/](https://www.veen.world/)
+
+---
+
+## 📜 License
+
+This project is licensed under the **GNU Affero General Public License, Version 3, 19 November 2007**.  
+See the [LICENSE](./LICENSE) file for details.
+
+---
+
+## 🤝 Contributions
+
+Contributions are welcome! Feel free to fork the repository, submit pull requests, or open issues to help improve Ansible Encrypter CLI. Let’s keep your files secure and your workflow efficient! 😊
