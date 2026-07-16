@@ -25,7 +25,7 @@ def should_process_file(filename, exclude_lower, filetypes_lower):
     """
     # Check if the filename (in lowercase) is in the exclusion list
     if filename.lower() in exclude_lower:
-        return False;
+        return False
 
     if filetypes_lower:
         # Check if filetypes is defined and if the filename (in lowercase) ends with any of the defined file types
